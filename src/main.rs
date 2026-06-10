@@ -85,7 +85,7 @@ fn extract_port(buf: String) -> io::Result<String> {
 }
 
 async fn listen(port: u16) -> io::Result<()> {
-    let listener = TcpListener::bind(("localhost", port)).await?;
+    let listener = TcpListener::bind(("::", port)).await?;
 
     eprintln!("listening on {port}");
     
@@ -108,7 +108,10 @@ async fn respond(mut socket: TcpStream, address: SocketAddr) {
     let mut line_reader = BufReader::new(reader);
     let mut buf = String::new();
     
-    while let Ok(bytes_read) = line_reader.read_line(&mut buf).await && bytes_read > 0 {
+    while let Ok(bytes_read) = line_reader.read_line(&mut buf).await {
+        if bytes_read <= 0 {
+            break;
+        }
         match writer.write_all(buf.as_bytes()).await {
             Ok(_) => { buf.clear() }
             Err(_) => break
