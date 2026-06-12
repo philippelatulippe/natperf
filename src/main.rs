@@ -50,7 +50,7 @@ async fn fanout(hostname: String, port: u16, max_clients: u32) -> io::Result<()>
             let mut line_reader = BufReader::new(reader);
             let mut buf = String::new();
 
-            tokio::time::sleep(Duration::from_secs(10)).await;
+            tokio::time::sleep(Duration::from_secs(5)).await;
             
             match line_reader.read_line(&mut buf).await {
                 Ok(0) => Err(io::Error::from(io::ErrorKind::UnexpectedEof)),
@@ -59,6 +59,7 @@ async fn fanout(hostname: String, port: u16, max_clients: u32) -> io::Result<()>
             }
         });
 
+        // Avoid having too many half-open connections, which triggers SYN flood protection
         if num % 200 == 0 {
             interval.tick().await;
         }
